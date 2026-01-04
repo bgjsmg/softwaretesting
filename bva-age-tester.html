@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BVA Age Boundary Testing Tool</title>
+    <style>
+        :root {
+            --color-primary: #2180 #8d;
+            --color-primary-hover: #1d7474;
+            --color-bg: #f5f5f5;
+            --color-surface: #ffffff;
+            --color-text: #1a1a1a;
+            --color-border: #ddd;
+            --color-success: #27ae60;
+            --color-error: #e74c3c;
+            --color-warning: #f39c12;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: linear-gradient(135deg, #218a8d 0%, #1d7474 100%);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .content-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #218a8d;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #218a8d;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--color-border);
+            border-radius: 4px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #218a8d;
+            box-shadow: 0 0 5px rgba(33, 138, 141, 0.3);
+        }
+
+        button {
+            background-color: #218a8d;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #1d7474;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 4px;
+            display: none;
+            border-left: 4px solid;
+        }
+
+        .result.success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left-color: #27ae60;
+            display: block;
+        }
+
+        .result.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left-color: #e74c3c;
+            display: block;
+        }
+
+        .result h3 {
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .result p {
+            margin: 5px 0;
+        }
+
+        .boundary-info {
+            background-color: #e3f2fd;
+            border-left: 4px solid #218a8d;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .boundary-info h3 {
+            color: #218a8d;
+            margin-bottom: 10px;
+        }
+
+        .test-cases-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .test-cases-table th,
+        .test-cases-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .test-cases-table th {
+            background-color: #218a8d;
+            color: white;
+            font-weight: 600;
+        }
+
+        .test-cases-table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .test-case-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-boundary {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-valid {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .badge-invalid {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .history {
+            margin-top: 30px;
+        }
+
+        .history h3 {
+            color: #218a8d;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .history-item {
+            background-color: #f9f9f9;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            border-left: 3px solid #218a8d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .clear-btn {
+            background-color: #6c757d;
+            margin-top: 10px;
+        }
+
+        .clear-btn:hover {
+            background-color: #5a6268;
+        }
+
+        .legend {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .legend h4 {
+            color: #218a8d;
+            margin-bottom: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            margin-right: 10px;
+        }
+
+        .info-box {
+            background-color: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+
+        .info-box p {
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧪 BVA Age Boundary Testing Tool</h1>
+            <p>Test Boundary Value Analysis with Age Range 18-60 years</p>
+        </header>
+
+        <div class="content-wrapper">
+            <!-- Left Column: Input Form -->
+            <div class="card">
+                <h2>Test Input</h2>
+
+                <div class="boundary-info">
+                    <h3>📋 Valid Range: 18 - 60 years</h3>
+                    <p><strong>Lower Boundary:</strong> 18 years</p>
+                    <p><strong>Upper Boundary:</strong> 60 years</p>
+                </div>
+
+                <form id="ageForm">
+                    <div class="form-group">
+                        <label for="ageInput">Enter Age (Test Value):</label>
+                        <input 
+                            type="number" 
+                            id="ageInput" 
+                            placeholder="Enter age between 1-120" 
+                            min="0" 
+                            max="150"
+                            required
+                        >
+                    </div>
+                    <button type="submit">Submit Test Case</button>
+                </form>
+
+                <div id="result" class="result"></div>
+
+                <div class="legend">
+                    <h4>📊 Boundary Testing Guide</h4>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #fff3cd;"></div>
+                        <span><strong>Boundary Values:</strong> 17, 18, 60, 61</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #d4edda;"></div>
+                        <span><strong>Valid Range:</strong> 18-60</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #f8d7da;"></div>
+                        <span><strong>Invalid Range:</strong> &lt;18 or &gt;60</span>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <p><strong>💡 Tip:</strong> Try testing boundary values like 17, 18, 19, 59, 60, 61 to identify edge case defects!</p>
+                </div>
+            </div>
+
+            <!-- Right Column: Test Cases & History -->
+            <div class="card">
+                <h2>Predefined Test Cases (2-Value BVA)</h2>
+
+                <table class="test-cases-table">
+                    <thead>
+                        <tr>
+                            <th>Test Case</th>
+                            <th>Value</th>
+                            <th>Category</th>
+                            <th>Expected Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>TC1</td>
+                            <td>17</td>
+                            <td><span class="test-case-badge badge-invalid">Below Min</span></td>
+                            <td>❌ Reject</td>
+                        </tr>
+                        <tr>
+                            <td>TC2</td>
+                            <td>18</td>
+                            <td><span class="test-case-badge badge-boundary">At Min</span></td>
+                            <td>✓ Accept</td>
+                        </tr>
+                        <tr>
+                            <td>TC3</td>
+                            <td>19</td>
+                            <td><span class="test-case-badge badge-valid">Above Min</span></td>
+                            <td>✓ Accept</td>
+                        </tr>
+                        <tr>
+                            <td>TC4</td>
+                            <td>59</td>
+                            <td><span class="test-case-badge badge-valid">Below Max</span></td>
+                            <td>✓ Accept</td>
+                        </tr>
+                        <tr>
+                            <td>TC5</td>
+                            <td>60</td>
+                            <td><span class="test-case-badge badge-boundary">At Max</span></td>
+                            <td>✓ Accept</td>
+                        </tr>
+                        <tr>
+                            <td>TC6</td>
+                            <td>61</td>
+                            <td><span class="test-case-badge badge-invalid">Above Max</span></td>
+                            <td>❌ Reject</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 style="color: #218a8d; margin-top: 25px; margin-bottom: 15px;">📝 Test Execution History</h3>
+                <div id="history" style="max-height: 300px; overflow-y: auto;">
+                    <p style="color: #999; text-align: center;">No tests executed yet. Submit a test case to see history.</p>
+                </div>
+                <button class="clear-btn" onclick="clearHistory()">Clear History</button>
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="card">
+            <h2>📊 Test Statistics</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                <div style="text-align: center; padding: 15px; background-color: #f0f0f0; border-radius: 4px;">
+                    <div style="font-size: 1.5em; font-weight: bold; color: #218a8d;" id="totalTests">0</div>
+                    <div style="color: #666;">Total Tests</div>
+                </div>
+                <div style="text-align: center; padding: 15px; background-color: #d4edda; border-radius: 4px;">
+                    <div style="font-size: 1.5em; font-weight: bold; color: #27ae60;" id="validCount">0</div>
+                    <div style="color: #155724;">Valid Cases</div>
+                </div>
+                <div style="text-align: center; padding: 15px; background-color: #f8d7da; border-radius: 4px;">
+                    <div style="font-size: 1.5em; font-weight: bold; color: #e74c3c;" id="invalidCount">0</div>
+                    <div style="color: #721c24;">Invalid Cases</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testHistory = [];
+        const MIN_AGE = 18;
+        const MAX_AGE = 60;
+
+        // Load history from localStorage
+        function loadHistory() {
+            const saved = localStorage.getItem('bvaTestHistory');
+            if (saved) {
+                testHistory = JSON.parse(saved);
+                updateUI();
+            }
+        }
+
+        // Save history to localStorage
+        function saveHistory() {
+            localStorage.setItem('bvaTestHistory', JSON.stringify(testHistory));
+        }
+
+        // Analyze age input
+        function analyzeAge(age) {
+            let isValid = age >= MIN_AGE && age <= MAX_AGE;
+            let category = '';
+            let message = '';
+
+            if (age < MIN_AGE) {
+                category = 'Below Minimum Boundary';
+                message = `Age ${age} is below the minimum valid age of ${MIN_AGE}`;
+            } else if (age === MIN_AGE) {
+                category = 'At Minimum Boundary';
+                message = `Age ${age} is at the minimum boundary (valid)`;
+            } else if (age > MIN_AGE && age < MAX_AGE) {
+                category = 'Within Valid Range';
+                message = `Age ${age} is within the valid range`;
+            } else if (age === MAX_AGE) {
+                category = 'At Maximum Boundary';
+                message = `Age ${age} is at the maximum boundary (valid)`;
+            } else if (age > MAX_AGE) {
+                category = 'Above Maximum Boundary';
+                message = `Age ${age} is above the maximum valid age of ${MAX_AGE}`;
+            }
+
+            return {
+                age: age,
+                isValid: isValid,
+                category: category,
+                message: message,
+                timestamp: new Date().toLocaleTimeString()
+            };
+        }
+
+        // Display result
+        function displayResult(result) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result ' + (result.isValid ? 'success' : 'error');
+
+            const icon = result.isValid ? '✅' : '❌';
+            const status = result.isValid ? 'VALID' : 'INVALID';
+
+            resultDiv.innerHTML = `
+                <h3>${icon} Test Result: ${status}</h3>
+                <p><strong>Age Input:</strong> ${result.age} years</p>
+                <p><strong>Category:</strong> ${result.category}</p>
+                <p><strong>Details:</strong> ${result.message}</p>
+                <p><strong>Time:</strong> ${result.timestamp}</p>
+            `;
+        }
+
+        // Update history display
+        function updateHistoryDisplay() {
+            const historyDiv = document.getElementById('history');
+
+            if (testHistory.length === 0) {
+                historyDiv.innerHTML = '<p style="color: #999; text-align: center;">No tests executed yet. Submit a test case to see history.</p>';
+                return;
+            }
+
+            let html = '';
+            testHistory.slice().reverse().forEach((test, index) => {
+                const icon = test.isValid ? '✓' : '✗';
+                const color = test.isValid ? '#27ae60' : '#e74c3c';
+                html += `
+                    <div class="history-item">
+                        <span style="color: ${color}; font-weight: bold;">${icon} Age ${test.age}</span>
+                        <span style="color: #666; font-size: 0.9em;">${test.timestamp}</span>
+                    </div>
+                `;
+            });
+            historyDiv.innerHTML = html;
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            const totalTests = testHistory.length;
+            const validCount = testHistory.filter(t => t.isValid).length;
+            const invalidCount = totalTests - validCount;
+
+            document.getElementById('totalTests').textContent = totalTests;
+            document.getElementById('validCount').textContent = validCount;
+            document.getElementById('invalidCount').textContent = invalidCount;
+        }
+
+        // Update UI
+        function updateUI() {
+            updateHistoryDisplay();
+            updateStatistics();
+        }
+
+        // Clear history
+        function clearHistory() {
+            if (confirm('Are you sure you want to clear all test history?')) {
+                testHistory = [];
+                saveHistory();
+                updateUI();
+                document.getElementById('result').className = 'result';
+            }
+        }
+
+        // Form submission
+        document.getElementById('ageForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const ageInput = document.getElementById('ageInput').value;
+            const age = parseInt(ageInput);
+
+            if (isNaN(age) || age < 0 || age > 150) {
+                alert('Please enter a valid age between 0 and 150');
+                return;
+            }
+
+            const result = analyzeAge(age);
+            displayResult(result);
+
+            testHistory.push(result);
+            saveHistory();
+            updateUI();
+
+            document.getElementById('ageInput').value = '';
+            document.getElementById('ageInput').focus();
+        });
+
+        // Initialize on page load
+        window.addEventListener('load', loadHistory);
+    </script>
+</body>
+</html>
